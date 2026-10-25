@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bacon Express – Minecraft Enchantments & PvP Shop</title>
+<style>
+  :root{
+    --nav:#131921; --nav2:#232f3e; --orange:#ff9900; --orange2:#febd69; --yellow:#ffd814; --yellow-b:#fcd200;
+    --bg:#eaeded; --card:#fff; --line:#d5d9d9; --text:#0f1111; --muted:#565959; --link:#007185; --linkh:#c7511f;
+    --price:#b12704; --green:#007600; --red:#b12704;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:"Amazon Ember",Arial,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+  button,input,select,textarea{font:inherit}
+  a{color:var(--link);cursor:pointer;text-decoration:none}
+  a:hover{color:var(--linkh);text-decoration:underline}
+
+  /* ---------- Kopfzeile ---------- */
+  header{position:sticky;top:0;z-index:30}
+  .top{background:var(--nav);color:#fff;display:flex;gap:10px;align-items:center;padding:8px 14px;flex-wrap:wrap}
+  .logo{font-size:24px;font-weight:700;color:#fff;cursor:pointer;white-space:nowrap;padding:4px 8px;border:1px solid transparent;border-radius:3px;line-height:1}
+  .logo:hover{border-color:#fff}
+  .logo small{display:block;height:3px;margin-top:3px;background:var(--orange);border-radius:0 0 50% 50%}
+  .logo span{color:var(--orange2)}
+  .search{flex:1;min-width:220px;display:flex;height:40px}
+  .search select{background:#e6e6e6;color:#555;border:0;border-radius:4px 0 0 4px;padding:0 8px;max-width:130px;cursor:pointer}
+  .search input{flex:1;min-width:0;border:0;padding:0 12px;font-size:15px;outline:none}
+  .search button{width:46px;border:0;background:var(--orange2);border-radius:0 4px 4px 0;cursor:pointer;font-size:18px}
+  .search button:hover{background:var(--orange)}
+  .hbtn{background:none;border:1px solid transparent;color:#fff;padding:5px 8px;border-radius:3px;cursor:pointer;text-align:left;line-height:1.2;white-space:nowrap}
+  .hbtn:hover{border-color:#fff}
+  .hbtn small{display:block;font-size:12px;color:#ddd}
+  .hbtn b{font-size:14px}
+  .hbtn .cnt{color:var(--orange2);font-weight:700;font-size:16px}
+  .acct{display:flex;align-items:center;gap:8px}
+  .acct img{width:30px;height:30px;image-rendering:pixelated;border-radius:3px}
+  .sub{background:var(--nav2);color:#fff;display:flex;gap:2px;padding:0 10px;overflow-x:auto;white-space:nowrap}
+  .sub a{color:#fff;padding:8px 10px;border:1px solid transparent;border-radius:3px;font-size:14px}
+  .sub a:hover,.sub a.on{border-color:#fff;text-decoration:none}
+  .sub .grow{flex:1}
+  .sub .promo{color:var(--orange2);font-weight:700}
+
+  main{max-width:1500px;margin:auto;padding:14px 14px 50px}
+  .badge{font-size:11px;padding:1px 7px;border-radius:99px;font-weight:700;vertical-align:middle}
+  .badge.owner{background:var(--orange);color:#111}
+  .badge.manager{background:#7a5cd6;color:#fff}
+  .badge.user{background:#ddd;color:#444}
+
+  /* ---------- Banner ---------- */
+  .hero{background:linear-gradient(110deg,#232f3e 0%,#37475a 55%,#ff9900 140%);color:#fff;border-radius:6px;padding:26px 28px;margin-bottom:14px}
+  .hero h1{margin:0 0 6px;font-size:28px}
+  .hero p{margin:0;color:#e8e8e8;font-size:15px}
+  .hero .tag{display:inline-block;margin-top:12px;background:var(--orange);color:#111;font-weight:700;padding:4px 12px;border-radius:99px;font-size:13px}
+
+  /* ---------- Suchergebnisse ---------- */
+  .layout{display:grid;grid-template-columns:230px 1fr;gap:16px;align-items:start}
+  .side{background:var(--card);border-radius:6px;padding:14px;position:sticky;top:112px}
+  .side h4{margin:14px 0 6px;font-size:15px}
+  .side h4:first-child{margin-top:0}
+  .side a{display:block;padding:3px 0;color:var(--text);font-size:14px}
+  .side a:hover{color:var(--linkh)}
+  .side a.on{font-weight:700}
+  .side .star{color:#ffa41c;letter-spacing:1px}
+  .side .pr{display:flex;gap:6px;align-items:center}
+  .side .pr input{width:100%;padding:5px;border:1px solid #888;border-radius:3px}
+  .side .pr button{padding:5px 8px;border:1px solid #888;border-radius:99px;background:#fff;cursor:pointer}
+  .resbar{background:var(--card);border-radius:6px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .resbar b{font-size:15px}
+  select.s{background:#f0f2f2;border:1px solid #d5d9d9;border-radius:8px;padding:5px 8px;cursor:pointer}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}
+  .card{background:var(--card);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:5px;border:1px solid transparent}
+  .card:hover{box-shadow:0 2px 10px rgba(0,0,0,.2)}
+  .pimg{font-size:70px;text-align:center;background:#f7f8f8;border-radius:4px;padding:18px 0;line-height:1}
+  .card h3{margin:4px 0 0;font-size:15px;font-weight:500;color:var(--link);line-height:1.3}
+  .card h3:hover{color:var(--linkh)}
+  .stars{color:#ffa41c;font-size:15px;letter-spacing:1px}
+  .stars em{color:var(--link);font-style:normal;font-size:12px;margin-left:4px}
+  .desc{font-size:12.5px;color:var(--muted);flex:1}
+  .price{display:flex;align-items:baseline;gap:4px;color:var(--text)}
+  .price .pn{font-size:26px;font-weight:500}
+  .price .pc{font-size:13px}
+  .express{font-size:12px;color:var(--muted)}
+  .express b{color:#0a8fd1}
+  .instock{color:var(--green);font-size:13px}
+  .btn{background:var(--yellow);border:1px solid var(--yellow-b);color:var(--text);padding:7px 14px;border-radius:99px;cursor:pointer}
+  .btn:hover{background:#f7ca00}
+  .btn.orange{background:#ffa41c;border-color:#ff8f00}
+  .btn.orange:hover{background:#fa8900}
+  .btn.alt{background:#fff;border-color:#d5d9d9}
+  .btn.alt:hover{background:#f7fafa}
+  .btn.red{background:#cc0c39;border-color:#cc0c39;color:#fff}
+  .btn.small{padding:3px 10px;font-size:13px}
+  .btn.full{width:100%}
+
+  /* ---------- Panels / Tabellen ---------- */
+  .panel{background:var(--card);border-radius:6px;padding:18px;margin-bottom:14px}
+  .panel h2{margin:0 0 12px;font-size:20px;font-weight:500}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:left;padding:8px;border-bottom:1px solid #e7e7e7;vertical-align:middle}
+  th{color:var(--muted);font-weight:600}
+  input[type=text],input[type=password],input[type=number]{background:#fff;color:var(--text);border:1px solid #888;border-top-color:#767676;padding:8px 10px;border-radius:3px;width:100%}
+  input:focus,select:focus{outline:none;border-color:#e77600;box-shadow:0 0 0 3px #c8f3fa}
+  td input[type=number]{width:100px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+  .row>div{flex:1;min-width:130px}
+  label{font-size:13px;font-weight:700;display:block;margin-bottom:3px}
+  .muted{color:var(--muted)}
+  .warn{background:#fff8e5;border:1px solid #f0c36d;color:#5c4400;border-radius:6px;padding:10px 12px;font-size:13px}
+
+  /* ---------- Warenkorb ---------- */
+  .cartwrap{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:start}
+  .cartitem{display:grid;grid-template-columns:100px 1fr auto;gap:14px;padding:14px 0;border-top:1px solid #ddd}
+  .cartitem:first-of-type{border-top:0}
+  .cartitem .pimg{font-size:48px;padding:12px 0}
+  .cartitem h3{margin:0 0 3px;font-size:17px;font-weight:500}
+  .cartitem .pr2{font-size:18px;font-weight:700;text-align:right}
+  .qty{display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap}
+  .qty input{width:64px}
+  .buybox{background:var(--card);border-radius:6px;padding:16px;position:sticky;top:112px}
+  .buybox .sum{font-size:18px;margin-bottom:10px}
+  .buybox .sum b{font-weight:700}
+  .buybox .line{display:flex;justify-content:space-between;margin:4px 0;font-size:14px}
+  .buybox .big{font-size:20px;font-weight:700;color:var(--price)}
+
+  /* ---------- Login ---------- */
+  .modal{position:fixed;inset:0;background:rgba(255,255,255,.85);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal.open{display:flex}
+  .modal .box{background:#fff;border:1px solid #ddd;border-radius:8px;padding:22px 26px;width:100%;max-width:370px;box-shadow:0 4px 24px rgba(0,0,0,.2)}
+  .modal .mlogo{text-align:center;font-size:26px;font-weight:700;margin-bottom:12px}
+  .modal .mlogo span{color:var(--orange)}
+  .tabs2{display:flex;gap:6px;margin-bottom:14px}
+  .tabs2 button{flex:1}
+  #toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#067d62;color:#fff;font-weight:700;padding:10px 18px;border-radius:6px;display:none;z-index:99;box-shadow:0 2px 10px rgba(0,0,0,.3)}
+  #toast.err{background:#cc0c39}
+  footer{background:var(--nav2);color:#ddd;text-align:center;font-size:12px;padding:26px 14px}
+  footer b{color:#fff}
+
+  @media(max-width:860px){
+    .layout,.cartwrap{grid-template-columns:1fr}
+    .side,.buybox{position:static}
+    .cartitem{grid-template-columns:70px 1fr}
+    .cartitem .pr2{grid-column:2;text-align:left}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="top">
+    <div class="logo" onclick="resetFilters();go('shop')">🥓 Bacon<span>Express</span><small></small></div>
+    <form class="search" onsubmit="event.preventDefault();go('shop')">
+      <select id="qcat" onchange="state.cat=this.value;go('shop')" title="Kategorie"></select>
+      <input id="q" placeholder="Bacon Express durchsuchen: Sharpness, Mending, Totem …" oninput="state.q=this.value;if(state.view==='shop')render()">
+      <button type="submit" aria-label="Suchen">🔍</button>
+    </form>
+    <div id="userbox"></div>
+    <button class="hbtn" id="ordersBtn" onclick="go('orders')" style="display:none"><small>Rückgabe</small><b>& Bestellungen</b></button>
+    <button class="hbtn" onclick="go('cart')"><small>&nbsp;</small><b>🛒 Warenkorb <span class="cnt" id="cartCount">0</span></b></button>
+  </div>
+  <nav class="sub" id="tabs"></nav>
+</header>
+
+<main id="app"></main>
+<footer><b>Bacon Express</b> – Fanprojekt, nicht von Mojang, Microsoft oder Amazon. Währungen: Dias (Minecraft-Diamanten) und Ancient Debris, nur Spiel-Währung.</footer>
+
+<!-- Login / Registrierung -->
+<div class="modal" id="authModal">
+  <div class="box">
+    <div class="mlogo">🥓 Bacon<span>Express</span></div>
+    <div class="tabs2">
+      <button class="btn" id="tabLogin" onclick="authTab('login')">Anmelden</button>
+      <button class="btn alt" id="tabReg" onclick="authTab('reg')">Konto erstellen</button>
+    </div>
+    <label>Minecraft-Spielername</label>
+    <input type="text" id="aName" maxlength="16" placeholder="z. B. Freshbacon22" autocomplete="username">
+    <br><br>
+    <label>Passwort</label>
+    <input type="password" id="aPass" autocomplete="current-password">
+    <div id="aPass2wrap" style="display:none"><br><label>Passwort wiederholen</label><input type="password" id="aPass2"></div>
+    <br>
+    <div class="row">
+      <button class="btn orange" style="flex:2" onclick="submitAuth()" id="aBtn">Anmelden</button>
+      <button class="btn alt" onclick="closeAuth()">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ============================================================
+   Bacon Express – komplett clientseitig (localStorage)
+   Admins: JuKroCraft, Freshbacon22  →  volle Rechte, können Rechte vergeben
+   Rolle "manager": Preise ändern + Rabattcodes erstellen
+   ============================================================ */
+const OWNERS = ["JuKroCraft", "Freshbacon22"];
+const ownerName = key => OWNERS.find(o => o.toLowerCase() === key) || null;
+
+/* ---------- Benachrichtigung bei neuer Bestellung ----------
+   Discord: Servereinstellungen → Integrationen → Webhooks → Neuer Webhook → URL kopieren
+   Pings:   "<@USER_ID>" (Person), "<@&ROLLEN_ID>" (Rolle), "@everyone"
+   ntfy:    Push aufs Handy/PC über ntfy.sh, ohne Konto. Leer lassen = aus
+*/
+const NOTIFY = {
+  webhook: "",                       // z. B. "https://discord.com/api/webhooks/123/abc..."
+  mentions: ["<@DEINE_USER_ID>"],    // wer gepingt wird
+  ntfy: "craftmart-jukro-k8x2p9qw4z" // ntfy-Thema (bei Bedarf ändern)
+};
+function sendNtfy(o){
+  if(!NOTIFY.ntfy) return null;
+  const items = o.items.map(i => i.qty + "x " + i.name).join(", ");
+  return fetch("https://ntfy.sh/", {
+    method: "POST",
+    body: JSON.stringify({
+      topic: NOTIFY.ntfy,
+      title: "🛒 Bacon Express: Bestellung von " + o.user,
+      message: items + "\nGesamt: " + (o.pay === "debris" ? o.debris + " Ancient Debris" : Number(o.total).toFixed(2) + " Dias") +
+        (o.tip ? "\nTrinkgeld: " + Number(o.tip).toFixed(2) + " Dias" : ""),
+      priority: 4,
+      tags: ["shopping_cart"]
+    })
+  });
+}
+function notifyCfg(){ return (db.notify && db.notify.webhook) ? db.notify : NOTIFY; }
+function notifyOrder(o){
+  const cfg = notifyCfg();
+  const np = sendNtfy(o); if(np) np.catch(() => {});
+  if(!cfg.webhook) return;
+  const items = o.items.map(i => "• " + i.qty + "× " + i.name).join("\n");
+  const text = cfg.mentions.join(" ") + "\n🛒 **Neue Bestellung bei Bacon Express** von **" + o.user + "**\n" + items +
+    "\n" + (o.code ? "Code: " + o.code + "\n" : "") + (o.tip ? "Trinkgeld: " + o.tip.toFixed(2) + " Dias\n" : "") +
+    "Zahlung: **" + (o.pay === "debris" ? o.debris + " Ancient Debris" : o.total.toFixed(2) + " Dias") + "**";
+  fetch(cfg.webhook, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      username: "Bacon Express",
+      content: text.slice(0, 1900),
+      allowed_mentions: {parse: ["users", "roles", "everyone"]}
+    })
+  }).catch(() => {});
+}
+
+const DB_KEY = "craftmart_db_v1";
+const SESSION_KEY = "craftmart_session_v1";
+const CART_KEY = "craftmart_cart_v1";
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = n => { const r = Math.round(n*100)/100; return Number.isInteger(r) ? String(r) : r.toFixed(2).replace('.',','); };
+const fmt = n => num(n) + " Dias";
+const priceHtml = n => `<span class="price"><span class="pn">${num(n)}</span><span class="pc">Dias</span></span>`;
+const starsTxt = r => "★".repeat(r) + "☆".repeat(5 - r);
+
+const DEFAULT_PRODUCTS = [
+  // Enchanted Books
+  {id:1, name:"Sharpness V – Enchanted Book", cat:"Enchantments", icon:"📕", price:45, rating:5, desc:"Maximaler Schwertschaden für jeden PvP-Kampf."},
+  {id:2, name:"Protection IV – Enchanted Book", cat:"Enchantments", icon:"📘", price:40, rating:5, desc:"Die Standard-Rüstungsverzauberung für alle vier Teile."},
+  {id:3, name:"Mending – Enchanted Book", cat:"Enchantments", icon:"📗", price:60, rating:5, desc:"Repariert deine Ausrüstung mit gesammelter Erfahrung."},
+  {id:4, name:"Unbreaking III – Enchanted Book", cat:"Enchantments", icon:"📙", price:25, rating:4, desc:"Deine Ausrüstung hält deutlich länger."},
+  {id:5, name:"Fire Protection IV – Enchanted Book", cat:"Enchantments", icon:"📕", price:35, rating:4, desc:"Weniger Feuer- und Lava-Schaden."},
+  {id:6, name:"Knockback II – Enchanted Book", cat:"Enchantments", icon:"📘", price:30, rating:4, desc:"Schleudere Gegner weit weg."},
+  {id:7, name:"Fire Aspect II – Enchanted Book", cat:"Enchantments", icon:"📙", price:30, rating:4, desc:"Setzt Gegner in Brand."},
+  {id:8, name:"Efficiency V – Enchanted Book", cat:"Enchantments", icon:"📗", price:35, rating:5, desc:"Blitzschnell abbauen."},
+  {id:9, name:"Looting III – Enchanted Book", cat:"Enchantments", icon:"📕", price:38, rating:4, desc:"Mehr Drops von Mobs."},
+  {id:10, name:"Feather Falling IV – Enchanted Book", cat:"Enchantments", icon:"📘", price:28, rating:4, desc:"Kein Fallschaden mehr bei großen Stürzen."},
+  {id:11, name:"Thorns III – Enchanted Book", cat:"Enchantments", icon:"📙", price:32, rating:3, desc:"Angreifer erleiden Schaden zurück."},
+  {id:12, name:"Power V – Enchanted Book", cat:"Enchantments", icon:"📗", price:42, rating:5, desc:"Stärkere Bogenschüsse."},
+  // PvP-Ausrüstung
+  {id:20, name:"Netherite Sword (Sharpness V, Mending)", cat:"PvP-Ausrüstung", icon:"⚔️", price:320, rating:5, desc:"Das ultimative PvP-Schwert."},
+  {id:21, name:"Netherite Armor Set (Protection IV)", cat:"PvP-Ausrüstung", icon:"🛡️", price:950, rating:5, desc:"Komplettes Set, voll verzaubert."},
+  {id:22, name:"Totem of Undying", cat:"PvP-Ausrüstung", icon:"🗿", price:90, rating:5, desc:"Rettet dich vor dem sicheren Tod."},
+  {id:23, name:"Enchanted Golden Apple", cat:"PvP-Ausrüstung", icon:"🍎", price:150, rating:5, desc:"Absorption, Regeneration & Feuerresistenz."},
+  {id:24, name:"Ender Pearls (Stack of 16)", cat:"PvP-Ausrüstung", icon:"🟣", price:55, rating:4, desc:"Zum Fliehen oder Überraschungsangriff."},
+  {id:25, name:"Netherite Axe (Sharpness V)", cat:"PvP-Ausrüstung", icon:"🪓", price:280, rating:4, desc:"Schild-Breaker für harte Duelle."},
+  {id:26, name:"Shield (Unbreaking III, Mending)", cat:"PvP-Ausrüstung", icon:"🔰", price:70, rating:4, desc:"Blockt Angriffe im Nahkampf."},
+  {id:27, name:"Elytra (Mending)", cat:"PvP-Ausrüstung", icon:"🪽", price:400, rating:5, desc:"Gleite schnell über die Karte."},
+  {id:28, name:"Bow (Power V, Infinity)", cat:"PvP-Ausrüstung", icon:"🏹", price:180, rating:5, desc:"Fernkampf-Waffe der Profis."},
+  // Tränke & Essen
+  {id:40, name:"Potion of Strength II (3:00)", cat:"Tränke & Essen", icon:"🧪", price:22, rating:4, desc:"Mehr Nahkampfschaden."},
+  {id:41, name:"Potion of Swiftness II (3:00)", cat:"Tränke & Essen", icon:"⚡", price:20, rating:4, desc:"Schneller laufen und angreifen."},
+  {id:42, name:"Potion of Fire Resistance (8:00)", cat:"Tränke & Essen", icon:"🔥", price:18, rating:4, desc:"Immun gegen Feuer und Lava."},
+  {id:43, name:"Golden Carrots (Stack of 64)", cat:"Tränke & Essen", icon:"🥕", price:25, rating:4, desc:"Bestes Essen für lange Kämpfe."},
+  {id:44, name:"Splash Potion of Healing II (8x)", cat:"Tränke & Essen", icon:"❤️", price:48, rating:5, desc:"Sofortige Heilung für dich und Teammates."},
+  // Materialien
+  {id:50, name:"Ancient Debris", cat:"Materialien", icon:"🟫", price:40, rating:5, desc:"Seltenes Nether-Erz – daraus entsteht Netherite. Auch als Zahlungsmittel akzeptiert."},
+  {id:51, name:"Netherite Ingot", cat:"Materialien", icon:"⬛", price:190, rating:5, desc:"Der stärkste Barren im Spiel für Upgrades."},
+  // Ominous Bottles (Bad Omen I–V)
+  {id:60, name:"Ominous Bottle – Level I", cat:"Tränke & Essen", icon:"🍾", price:30, rating:4, desc:"Gibt Bad Omen I. Löst im Dorf einen Raid aus – leichteste Stufe."},
+  {id:61, name:"Ominous Bottle – Level II", cat:"Tränke & Essen", icon:"🍾", price:45, rating:4, desc:"Gibt Bad Omen II. Der Raid wird merklich stärker."},
+  {id:62, name:"Ominous Bottle – Level III", cat:"Tränke & Essen", icon:"🍾", price:60, rating:5, desc:"Gibt Bad Omen III. Mehr Wellen und mehr Gegner."},
+  {id:63, name:"Ominous Bottle – Level IV", cat:"Tränke & Essen", icon:"🍾", price:80, rating:5, desc:"Gibt Bad Omen IV. Ein harter Raid für erfahrene Spieler."},
+  {id:64, name:"Ominous Bottle – Level V", cat:"Tränke & Essen", icon:"🍾", price:100, rating:5, desc:"Gibt Bad Omen V. Maximale Raid-Schwierigkeit."}
+];
+
+/* Tausch-Kurs: 1 Ancient Debris = X Dias (in der Verwaltung änderbar) */
+const DEFAULT_SETTINGS = {debrisRate: 40};
+
+/* ---------- Datenbank ---------- */
+const DB_VER = 5;   // erhöhen, wenn sich die Standard-Produkte ändern
+function loadDB(){
+  try{
+    const d = JSON.parse(localStorage.getItem(DB_KEY));
+    if(d && d.users && d.products){
+      if((d.ver || 0) < DB_VER){
+        // Standard-Produkte aktualisieren, aber geänderte Preise und selbst angelegte Produkte behalten
+        const old = d.products;
+        d.products = DEFAULT_PRODUCTS.map(p => { const o = old.find(x => x.id === p.id); return o ? Object.assign({}, p, {price: o.price}) : p; })
+          .concat(old.filter(x => x.id >= 100));
+        d.ver = DB_VER;
+      }
+      d.settings = Object.assign({}, DEFAULT_SETTINGS, d.settings || {});
+      // Admins immer als Besitzer führen
+      Object.keys(d.users).forEach(k => { const n = ownerName(k); if(n){ d.users[k].role = "owner"; d.users[k].name = n; } });
+      return d;
+    }
+  }catch(e){}
+  return {ver:DB_VER, users:{}, products:DEFAULT_PRODUCTS, codes:{}, orders:[], nextId:100, settings:Object.assign({}, DEFAULT_SETTINGS)};
+}
+let db = loadDB();
+function saveDB(){ localStorage.setItem(DB_KEY, JSON.stringify(db)); }
+
+let session = localStorage.getItem(SESSION_KEY) || null;   // gespeicherter Name (klein geschrieben)
+let cart = {};
+try{ cart = JSON.parse(localStorage.getItem(CART_KEY)) || {}; }catch(e){}
+function saveCart(){ localStorage.setItem(CART_KEY, JSON.stringify(cart)); }
+
+const state = {view:"shop", cat:"Alle", sort:"std", q:"", rating:0, pmin:null, pmax:null, appliedCode:null, cats:["Alle"], pay:"dias", tipPct:0, tipCustom:null};
+
+/* ---------- Zahlung & Trinkgeld ---------- */
+const TIP_PRESETS = [0, 5, 10, 15];
+const rate = () => Math.max(1, Number(db.settings && db.settings.debrisRate) || 40);
+const fmtDebris = n => num(n) + " Ancient Debris";
+
+/* ---------- Hilfsfunktionen ---------- */
+function me(){ return session ? db.users[session] || null : null; }
+function canEdit(){ const u = me(); return !!u && (u.role === "owner" || u.role === "manager"); }
+function isOwner(){ const u = me(); return !!u && u.role === "owner"; }
+
+function toast(msg, err){
+  const t = $("#toast");
+  t.textContent = msg; t.className = err ? "err" : ""; t.style.display = "block";
+  clearTimeout(toast.t); toast.t = setTimeout(()=>t.style.display="none", 2600);
+}
+async function sha256(txt){
+  if(!(window.crypto && crypto.subtle)) throw new Error("Bitte die Seite über HTTPS (GitHub Pages) öffnen.");
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(txt));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function randomSalt(){
+  const a = new Uint8Array(12); crypto.getRandomValues(a);
+  return Array.from(a).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function avatar(name, size){
+  return `<img src="https://minotar.net/helm/${encodeURIComponent(name)}/${size||32}.png" alt="" onerror="this.style.visibility='hidden'">`;
+}
+function roleBadge(role){
+  const label = role === "owner" ? "Admin" : role === "manager" ? "Manager" : "Spieler";
+  return `<span class="badge ${role}">${label}</span>`;
+}
+
+/* ---------- Auth ---------- */
+let authMode = "login";
+function openAuth(mode){ authTab(mode||"login"); $("#authModal").classList.add("open"); setTimeout(()=>$("#aName").focus(),50); }
+function closeAuth(){ $("#authModal").classList.remove("open"); $("#aPass").value=""; $("#aPass2").value=""; }
+function authTab(mode){
+  authMode = mode;
+  $("#tabLogin").className = "btn" + (mode==="login" ? "" : " alt");
+  $("#tabReg").className = "btn" + (mode==="reg" ? "" : " alt");
+  $("#aPass2wrap").style.display = mode==="reg" ? "block" : "none";
+  $("#aBtn").textContent = mode==="reg" ? "Konto erstellen" : "Anmelden";
+}
+async function submitAuth(){
+  const name = $("#aName").value.trim();
+  const pass = $("#aPass").value;
+  if(!/^[A-Za-z0-9_]{3,16}$/.test(name)) return toast("Ungültiger Minecraft-Name (3–16 Zeichen: A–Z, 0–9, _)", true);
+  if(pass.length < 6) return toast("Passwort muss mindestens 6 Zeichen haben.", true);
+  const key = name.toLowerCase();
+  try{
+    if(authMode === "reg"){
+      if($("#aPass2").value !== pass) return toast("Passwörter stimmen nicht überein.", true);
+      if(db.users[key]) return toast("Dieser Spielername ist schon registriert.", true);
+      const salt = randomSalt();
+      const hash = await sha256(salt + pass);
+      const adminName = ownerName(key);
+      db.users[key] = {name: adminName || name, salt, hash, role: adminName ? "owner" : "user", created: Date.now()};
+      saveDB();
+      session = key; localStorage.setItem(SESSION_KEY, session);
+      toast(adminName ? "Willkommen bei Bacon Express, Admin " + adminName + "!" : "Konto erstellt. Willkommen, " + name + "!");
+    }else{
+      const u = db.users[key];
+      if(!u) return toast("Unbekannter Spielername.", true);
+      const hash = await sha256(u.salt + pass);
+      if(hash !== u.hash) return toast("Falsches Passwort.", true);
+      session = key; localStorage.setItem(SESSION_KEY, session);
+      toast("Angemeldet als " + u.name);
+    }
+    closeAuth(); render();
+  }catch(e){ toast(e.message, true); }
+}
+function logout(){ session = null; localStorage.removeItem(SESSION_KEY); state.view = "shop"; toast("Abgemeldet."); render(); }
+
+/* ---------- Navigation / Filter ---------- */
+function go(v){ state.view = v; render(); window.scrollTo(0,0); }
+function setCat(i){ state.cat = state.cats[i] || "Alle"; go("shop"); }
+function setRating(n){ state.rating = n; render(); }
+function setPrice(){
+  const a = parseFloat($("#fMin").value), b = parseFloat($("#fMax").value);
+  state.pmin = isNaN(a) ? null : a; state.pmax = isNaN(b) ? null : b; render();
+}
+function resetFilters(){ state.cat = "Alle"; state.q = ""; state.rating = 0; state.pmin = null; state.pmax = null; $("#q").value = ""; }
+
+/* ---------- Warenkorb ---------- */
+function addToCart(id){
+  if(!me()){ toast("Bitte zuerst anmelden.", true); return openAuth("login"); }
+  cart[id] = (cart[id] || 0) + 1; saveCart(); renderHeader(); toast("Zum Warenkorb hinzugefügt");
+}
+function setQty(id, q){
+  q = parseInt(q,10);
+  if(!q || q < 1) delete cart[id]; else cart[id] = Math.min(q, 99);
+  saveCart(); render();
+}
+function cartLines(){
+  return Object.keys(cart).map(id => {
+    const p = db.products.find(x => x.id == id);
+    return p ? {p, qty: cart[id]} : null;
+  }).filter(Boolean);
+}
+function cartTotals(){
+  const lines = cartLines();
+  const sub = lines.reduce((s,l)=>s + l.p.price * l.qty, 0);
+  const code = state.appliedCode && db.codes[state.appliedCode];
+  const pct = code && code.active ? code.percent : 0;
+  const disc = sub * pct / 100;
+  const after = sub - disc;
+  // Trinkgeld: entweder eigener Betrag (in Dias) oder Prozent vom Betrag nach Rabatt
+  const tip = state.tipCustom !== null ? Math.max(0, state.tipCustom) : Math.round(after * state.tipPct) / 100;
+  const total = after + tip;
+  const debris = Math.ceil(total / rate());   // aufgerundet auf ganze Ancient Debris
+  return {lines, sub, pct, disc, after, tip, total, debris, count: lines.reduce((s,l)=>s+l.qty,0)};
+}
+function setPay(m){ state.pay = m; render(); }
+function setTipPct(p){ state.tipPct = p; state.tipCustom = null; render(); }
+function setTipCustom(v){
+  const n = parseFloat(String(v).replace(",","."));
+  state.tipCustom = isNaN(n) || n <= 0 ? null : n;
+  if(state.tipCustom !== null) state.tipPct = 0;
+  render();
+}
+function applyCode(){
+  const c = $("#codeInput").value.trim().toUpperCase();
+  const code = db.codes[c];
+  if(!code || !code.active) { state.appliedCode = null; toast("Ungültiger oder inaktiver Rabattcode.", true); return render(); }
+  state.appliedCode = c; toast("Rabattcode " + c + " angewendet: -" + code.percent + "%"); render();
+}
+function checkout(){
+  const t = cartTotals();
+  if(!t.lines.length) return;
+  const order = {
+    id: Date.now(), user: me().name, date: new Date().toISOString(),
+    items: t.lines.map(l => ({name:l.p.name, qty:l.qty, price:l.p.price})),
+    subtotal: t.sub, discount: t.disc, code: t.pct ? state.appliedCode : null,
+    tip: t.tip, total: t.total, pay: state.pay, debris: state.pay === "debris" ? t.debris : 0, rate: rate()
+  };
+  db.orders.push(order);
+  notifyOrder(order);
+  saveDB(); cart = {}; saveCart(); state.appliedCode = null; state.tipPct = 0; state.tipCustom = null; state.pay = "dias";
+  toast("Bestellung aufgegeben! Die Lieferung erfolgt ingame."); go("orders");
+}
+
+/* ---------- Admin-Aktionen ---------- */
+function savePrice(id){
+  if(!isOwner()) return toast("Nur Admins dürfen Preise ändern.", true);
+  const v = parseFloat(String($("#pr"+id).value).replace(",","."));
+  if(!(v >= 0)) return toast("Ungültiger Preis.", true);
+  db.products.find(p=>p.id===id).price = v; saveDB(); toast("Preis gespeichert."); render();
+}
+function saveRate(){
+  if(!isOwner()) return toast("Nur Admins dürfen den Kurs ändern.", true);
+  const v = parseFloat($("#rateInput").value);
+  if(!(v >= 1)) return toast("Kurs muss mindestens 1 sein.", true);
+  db.settings.debrisRate = v; saveDB(); toast("Kurs gespeichert."); render();
+}
+function addProduct(){
+  if(!isOwner()) return toast("Nur Admins dürfen Produkte hinzufügen.", true);
+  const name = $("#npName").value.trim(), cat = $("#npCat").value, price = parseFloat(String($("#npPrice").value).replace(",","."));
+  const icon = $("#npIcon").value.trim() || "📦", desc = $("#npDesc").value.trim();
+  if(!name || !(price >= 0)) return toast("Name und Preis angeben.", true);
+  db.products.push({id: db.nextId++, name, cat, icon, price, rating:4, desc});
+  saveDB(); toast("Produkt hinzugefügt."); render();
+}
+function delProduct(id){
+  if(!isOwner()) return toast("Nur Admins dürfen Produkte löschen.", true);
+  if(!confirm("Produkt wirklich löschen?")) return;
+  db.products = db.products.filter(p=>p.id!==id); delete cart[id]; saveDB(); saveCart(); render();
+}
+function addCode(){
+  if(!isOwner()) return toast("Nur Admins dürfen Rabattcodes erstellen.", true);
+  const c = $("#cCode").value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,"");
+  const pct = parseInt($("#cPct").value,10);
+  if(!c || !(pct >= 1 && pct <= 100)) return toast("Code und Prozent (1–100) angeben.", true);
+  db.codes[c] = {percent:pct, active:true, by: me().name}; saveDB(); toast("Rabattcode " + c + " erstellt."); render();
+}
+function toggleCode(c){ if(!isOwner()) return; db.codes[c].active = !db.codes[c].active; saveDB(); render(); }
+function delCode(c){ if(!isOwner()) return; delete db.codes[c]; if(state.appliedCode===c) state.appliedCode=null; saveDB(); render(); }
+function setRole(key, role){
+  if(!isOwner()) return toast("Nur Admins dürfen Rechte vergeben.", true);
+  const u = db.users[key]; if(!u || u.role === "owner") return;
+  u.role = role; saveDB(); toast(u.name + " ist jetzt " + (role==="manager"?"Manager":"Spieler") + "."); render();
+}
+function grantByName(){
+  if(!isOwner()) return;
+  const key = $("#gName").value.trim().toLowerCase();
+  if(!db.users[key]) return toast("Dieser Spieler hat noch kein Konto.", true);
+  setRole(key, "manager");
+}
+function readNotifyForm(){
+  return {
+    webhook: $("#nWebhook").value.trim(),
+    mentions: $("#nMentions").value.split(",").map(s => s.trim()).filter(Boolean)
+  };
+}
+function validWebhook(u){ return /^https:\/\/(discord|discordapp)\.com\/api\/webhooks\/\d+\/[\w-]+/.test(u); }
+function saveNotify(){
+  if(!isOwner()) return;
+  const c = readNotifyForm();
+  if(c.webhook && !validWebhook(c.webhook)) return toast("Das ist keine gültige Discord-Webhook-URL.", true);
+  db.notify = c; saveDB(); toast("Gespeichert (gilt in diesem Browser).");
+}
+async function testNtfy(){
+  if(!NOTIFY.ntfy) return toast("Kein ntfy-Thema in der Datei eingetragen.", true);
+  try{
+    const r = await sendNtfy({user:"Test", items:[{qty:1, name:"Testartikel"}], total:0});
+    toast(r.ok ? "ntfy-Test gesendet – schau aufs Handy!" : "ntfy-Fehler " + r.status, !r.ok);
+  }catch(e){ toast("Senden fehlgeschlagen.", true); }
+}
+async function testNotify(){
+  const c = readNotifyForm();
+  if(!validWebhook(c.webhook)) return toast("Bitte zuerst eine gültige Webhook-URL eintragen.", true);
+  try{
+    const res = await fetch(c.webhook, {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        username: "Bacon Express",
+        content: c.mentions.join(" ") + "\n✅ **Test:** Der Bacon-Express-Webhook funktioniert!",
+        allowed_mentions: {parse: ["users", "roles", "everyone"]}
+      })
+    });
+    if(res.ok) toast("Testnachricht gesendet – schau in Discord!");
+    else toast("Discord hat abgelehnt (Fehler " + res.status + "). Webhook gelöscht?", true);
+  }catch(e){ toast("Senden fehlgeschlagen.", true); }
+}
+function notifyCode(){
+  const c = readNotifyForm();
+  const out = $("#nCode");
+  out.style.display = "block";
+  out.value = "const NOTIFY = {\n  webhook: " + JSON.stringify(c.webhook) + ",\n  mentions: " + JSON.stringify(c.mentions) + ",\n  ntfy: " + JSON.stringify(NOTIFY.ntfy) + "\n};";
+  out.select();
+  toast("Code erzeugt – ersetze damit den NOTIFY-Block in der index.html.");
+}
+function exportDB(){
+  const blob = new Blob([JSON.stringify(db,null,2)], {type:"application/json"});
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "baconexpress-backup.json"; a.click();
+}
+function importDB(ev){
+  if(!isOwner()) return;
+  const f = ev.target.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = () => { try{ const d = JSON.parse(r.result); if(!d.users||!d.products) throw 0; db = d; saveDB(); toast("Backup importiert."); render(); }catch(e){ toast("Ungültige Datei.", true); } };
+  r.readAsText(f);
+}
+function resetShop(){
+  if(!isOwner() || !confirm("ALLES zurücksetzen (Produkte, Codes, Bestellungen, Nutzer)?")) return;
+  localStorage.removeItem(DB_KEY); localStorage.removeItem(SESSION_KEY); localStorage.removeItem(CART_KEY); location.reload();
+}
+
+/* ---------- Rendering ---------- */
+function renderHeader(){
+  const u = me();
+  const cats = ["Alle", ...new Set(db.products.map(p=>p.cat))];
+  state.cats = cats;
+
+  // Kategorie-Auswahl in der Suchleiste
+  const sel = $("#qcat");
+  sel.innerHTML = cats.map(c => `<option value="${esc(c)}" ${state.cat===c?"selected":""}>${c==="Alle"?"Alle":esc(c)}</option>`).join("");
+
+  $("#userbox").innerHTML = u
+    ? `<div class="acct">${avatar(u.name,30)}<div class="hbtn" style="cursor:default"><small>Hallo, ${esc(u.name)} ${roleBadge(u.role)}</small><b><a style="color:#fff" onclick="logout()">Abmelden</a></b></div></div>`
+    : `<button class="hbtn" onclick="openAuth('login')"><small>Hallo, Anmelden</small><b>Konto & Listen</b></button>
+       <button class="hbtn" onclick="openAuth('reg')"><small>Neu hier?</small><b>Konto erstellen</b></button>`;
+  $("#ordersBtn").style.display = u ? "block" : "none";
+  $("#cartCount").textContent = Object.values(cart).reduce((a,b)=>a+b,0);
+
+  let nav = `<a class="${state.view==='shop'&&state.cat==='Alle'?'on':''}" onclick="resetFilters();go('shop')">☰ Alle</a>`;
+  nav += cats.slice(1).map((c,i) => `<a class="${state.view==='shop'&&state.cat===c?'on':''}" onclick="setCat(${i+1})">${esc(c)}</a>`).join("");
+  if(canEdit()) nav += `<a class="${state.view==='admin'?'on':''}" onclick="go('admin')">⚙️ Verwaltung</a>`;
+  nav += `<span class="grow"></span><span class="promo" style="padding:8px 10px">⚡ Express-Lieferung ingame</span>`;
+  $("#tabs").innerHTML = nav;
+}
+
+function viewShop(){
+  const cats = state.cats;
+  const term = state.q.toLowerCase();
+  let list = db.products.filter(p =>
+    (state.cat==="Alle" || p.cat===state.cat) &&
+    (p.name + " " + p.desc + " " + p.cat).toLowerCase().includes(term) &&
+    p.rating >= state.rating &&
+    (state.pmin===null || p.price >= state.pmin) &&
+    (state.pmax===null || p.price <= state.pmax));
+  if(state.sort==="asc") list.sort((a,b)=>a.price-b.price);
+  if(state.sort==="desc") list.sort((a,b)=>b.price-a.price);
+  if(state.sort==="rate") list.sort((a,b)=>b.rating-a.rating);
+
+  const filtering = state.cat!=="Alle" || term || state.rating || state.pmin!==null || state.pmax!==null;
+  const hero = filtering ? "" : `
+    <div class="hero"><h1>🥓 Willkommen bei Bacon Express</h1>
+      <p>Enchantments, PvP-Ausrüstung und Tränke – schnell geliefert, direkt ingame.</p>
+      <span class="tag">⚡ Express-Lieferung</span></div>`;
+
+  return `${hero}
+    <div class="layout">
+      <aside class="side">
+        <h4>Kategorie</h4>
+        ${cats.map((c,i)=>`<a class="${state.cat===c?"on":""}" onclick="setCat(${i})">${c==="Alle"?"Alle Kategorien":esc(c)}</a>`).join("")}
+        <h4>Kundenbewertung</h4>
+        ${[4,3,2].map(n=>`<a class="${state.rating===n?"on":""}" onclick="setRating(${n})"><span class="star">${starsTxt(n)}</span> &amp; mehr</a>`).join("")}
+        ${state.rating ? `<a onclick="setRating(0)">Zurücksetzen</a>` : ""}
+        <h4>Preis (Dias)</h4>
+        <div class="pr">
+          <input type="number" id="fMin" min="0" placeholder="Min" value="${state.pmin===null?"":state.pmin}">
+          <input type="number" id="fMax" min="0" placeholder="Max" value="${state.pmax===null?"":state.pmax}">
+          <button onclick="setPrice()">Los</button>
+        </div>
+      </aside>
+      <section>
+        <div class="resbar">
+          <span><b>${list.length}</b> ${list.length===1?"Ergebnis":"Ergebnisse"}${state.cat!=="Alle" ? ` für <b style="color:var(--linkh)">${esc(state.cat)}</b>` : ""}${term ? ` für „<b style="color:var(--linkh)">${esc(state.q)}</b>“` : ""}</span>
+          <span>Sortieren nach:
+            <select class="s" onchange="state.sort=this.value;render()">
+              <option value="std" ${state.sort==="std"?"selected":""}>Empfohlen</option>
+              <option value="asc" ${state.sort==="asc"?"selected":""}>Preis: aufsteigend</option>
+              <option value="desc" ${state.sort==="desc"?"selected":""}>Preis: absteigend</option>
+              <option value="rate" ${state.sort==="rate"?"selected":""}>Durchschnittliche Bewertung</option>
+            </select>
+          </span>
+        </div>
+        <div class="grid">
+          ${list.map(p=>`
+            <div class="card">
+              <div class="pimg">${esc(p.icon)}</div>
+              <h3>${esc(p.name)}</h3>
+              <div class="stars">${starsTxt(p.rating)}</div>
+              ${priceHtml(p.price)}
+              <div class="muted" style="font-size:13px">oder <b>${Math.ceil(p.price / rate())}</b> 🟫 Ancient Debris</div>
+              <div class="express"><b>⚡ Express</b> – Lieferung ingame</div>
+              <div class="instock">Auf Lager</div>
+              <div class="desc">${esc(p.desc)}</div>
+              <button class="btn" onclick="addToCart(${p.id})">In den Einkaufswagen</button>
+            </div>`).join("") || `<div class="panel" style="grid-column:1/-1"><b>Keine Ergebnisse.</b><br><span class="muted">Versuche es mit anderen Suchbegriffen oder Filtern.</span></div>`}
+        </div>
+      </section>
+    </div>`;
+}
+
+function viewCart(){
+  const t = cartTotals();
+  if(!t.lines.length) return `<div class="panel"><h2>Dein Bacon Express Einkaufswagen ist leer</h2><p class="muted">Stöbere durch unsere Angebote und finde etwas Passendes.</p><button class="btn" onclick="go('shop')">Weiter einkaufen</button></div>`;
+  return `
+    <div class="cartwrap">
+      <div class="panel">
+        <h2>Einkaufswagen</h2>
+        <div class="muted" style="text-align:right;margin-top:-26px;margin-bottom:6px">Preis</div>
+        ${t.lines.map(l=>`
+          <div class="cartitem">
+            <div class="pimg">${esc(l.p.icon)}</div>
+            <div>
+              <h3><a>${esc(l.p.name)}</a></h3>
+              <div class="instock">Auf Lager</div>
+              <div class="express"><b>⚡ Express</b> – Lieferung ingame</div>
+              <div class="qty">
+                Menge: <input type="number" min="0" max="99" value="${l.qty}" onchange="setQty(${l.p.id},this.value)">
+                <a onclick="setQty(${l.p.id},0)">Löschen</a>
+              </div>
+            </div>
+            <div class="pr2">${fmt(l.p.price*l.qty)}<div class="muted" style="font-size:12px;font-weight:400">≙ ${Math.ceil(l.p.price*l.qty / rate())} 🟫 Ancient Debris</div></div>
+          </div>`).join("")}
+        <div style="text-align:right;font-size:18px;border-top:1px solid #ddd;padding-top:12px">
+          Zwischensumme (${t.count} ${t.count===1?"Artikel":"Artikel"}): <b>${fmt(t.sub)}</b></div>
+      </div>
+      <div>
+        <div class="buybox">
+          <div class="sum">Zwischensumme (${t.count} Artikel): <b>${fmt(t.sub)}</b></div>
+          ${t.pct ? `<div class="line"><span>Rabatt (${esc(state.appliedCode)}, -${t.pct}%)</span><span style="color:var(--green)">-${fmt(t.disc)}</span></div>` : ""}
+
+          <div style="border-top:1px solid #ddd;margin:12px 0 8px;padding-top:10px">
+            <label>Zahlungsart</label>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center;margin:4px 0;cursor:pointer">
+              <input type="radio" name="pay" ${state.pay==="dias"?"checked":""} onchange="setPay('dias')"> 💎 Dias</label>
+            <label style="font-weight:400;display:flex;gap:6px;align-items:center;margin:4px 0;cursor:pointer">
+              <input type="radio" name="pay" ${state.pay==="debris"?"checked":""} onchange="setPay('debris')"> 🟫 Ancient Debris <span class="muted">(1 = ${num(rate())} Dias)</span></label>
+          </div>
+
+          <div style="border-top:1px solid #ddd;margin:8px 0;padding-top:10px">
+            <label>Trinkgeld 🥓 <span class="muted" style="font-weight:400">(freiwillig)</span></label>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0">
+              ${TIP_PRESETS.map(p=>`<button class="btn small ${state.tipCustom===null && state.tipPct===p ? "orange" : "alt"}" onclick="setTipPct(${p})">${p===0?"Kein":p+"%"}</button>`).join("")}
+            </div>
+            <input type="number" min="0" step="1" placeholder="Eigener Betrag in Dias" value="${state.tipCustom===null?"":state.tipCustom}" onchange="setTipCustom(this.value)">
+          </div>
+
+          ${t.tip > 0 ? `<div class="line"><span>Trinkgeld</span><span>+${fmt(t.tip)}</span></div>` : ""}
+          <div class="line"><span>Gesamt</span><span class="big">${state.pay==="debris" ? fmtDebris(t.debris) : fmt(t.total)}</span></div>
+          ${state.pay==="debris" ? `<div class="muted" style="font-size:12px;text-align:right">≙ ${fmt(t.total)}, aufgerundet auf ganze Ancient Debris</div>` : ""}
+          <br>
+          ${me() ? `<button class="btn orange full" onclick="checkout()">Zur Kasse gehen</button>` : `<button class="btn orange full" onclick="openAuth('login')">Zum Bestellen anmelden</button>`}
+        </div>
+        <div class="buybox" style="margin-top:12px;position:static">
+          <label>Gutscheincode</label>
+          <div class="row"><div><input type="text" id="codeInput" placeholder="CODE" value="${esc(state.appliedCode||"")}"></div>
+          <div style="flex:0"><button class="btn" onclick="applyCode()">Einlösen</button></div></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function viewOrders(){
+  if(!me()) return `<div class="panel">Bitte anmelden.</div>`;
+  const mine = db.orders.filter(o => o.user.toLowerCase() === session).reverse();
+  return `<div class="panel"><h2>Meine Bestellungen</h2>${mine.length ? mine.map(o=>`
+    <div style="border:1px solid #ddd;border-radius:8px;margin-bottom:12px;overflow:hidden">
+      <div style="background:#f0f2f2;padding:10px 14px;display:flex;gap:30px;flex-wrap:wrap;font-size:13px">
+        <div><div class="muted">BESTELLUNG AUFGEGEBEN</div>${new Date(o.date).toLocaleDateString("de-DE")}</div>
+        <div><div class="muted">SUMME</div>${o.pay==="debris" ? fmtDebris(o.debris) : fmt(o.total)}</div>
+        ${o.tip ? `<div><div class="muted">TRINKGELD</div>${fmt(o.tip)}</div>` : ""}
+        <div><div class="muted">BESTELLNR.</div>#${o.id}</div>
+      </div>
+      <div style="padding:12px 14px">
+        ${o.items.map(i=>`<div>${i.qty}× ${esc(i.name)}</div>`).join("")}
+        ${o.code ? `<div class="muted" style="margin-top:6px">Gutschein: ${esc(o.code)}</div>` : ""}
+      </div>
+    </div>`).join("") : `<p class="muted">Du hast noch keine Bestellungen aufgegeben.</p>`}</div>`;
+}
+
+function viewAdmin(){
+  if(!canEdit()) return `<div class="panel">Kein Zugriff.</div>`;
+  const cats = ["Enchantments","PvP-Ausrüstung","Tränke & Essen","Materialien"];
+  // Preise, Produkte und Kurs: nur Admins. Manager sehen nur die Rabattcodes.
+  let html = !isOwner() ? `<div class="warn" style="margin-bottom:14px">Du bist Manager. Preise, Produkte und Rabattcodes dürfen nur Admins ändern.</div>` : `
+    <div class="panel"><h2>Ancient-Debris-Kurs</h2>
+      <p class="muted" style="margin-top:0">Wie viele Dias ist 1 Ancient Debris wert? Danach wird berechnet, wie viele Ancient Debris Kunden bezahlen, wenn sie diese Zahlungsart wählen.</p>
+      <div class="row"><div><label>1 Ancient Debris = … Dias</label><input type="number" id="rateInput" min="1" step="1" value="${rate()}"></div>
+      <div style="flex:0"><button class="btn orange" onclick="saveRate()">Speichern</button></div></div>
+    </div>
+    <div class="panel"><h2>Preise ändern</h2>
+      <table><tr><th></th><th>Produkt</th><th>Preis (Dias)</th><th></th></tr>
+      ${db.products.map(p=>`<tr>
+        <td style="font-size:22px">${esc(p.icon)}</td><td>${esc(p.name)}</td>
+        <td><input type="number" step="0.01" min="0" id="pr${p.id}" value="${p.price}"></td>
+        <td><button class="btn small" onclick="savePrice(${p.id})">Speichern</button>
+            <button class="btn red small" onclick="delProduct(${p.id})">Löschen</button></td></tr>`).join("")}
+      </table>
+    </div>
+    <div class="panel"><h2>Neues Produkt</h2>
+      <div class="row">
+        <div style="flex:2"><label>Name</label><input type="text" id="npName"></div>
+        <div><label>Kategorie</label><select id="npCat" class="s" style="width:100%;padding:8px">${cats.map(c=>`<option>${c}</option>`).join("")}</select></div>
+        <div><label>Preis (Dias)</label><input type="number" id="npPrice" step="0.01" min="0"></div>
+        <div><label>Icon (Emoji)</label><input type="text" id="npIcon" maxlength="4" placeholder="📦"></div>
+      </div><br>
+      <label>Beschreibung</label><input type="text" id="npDesc"><br><br>
+      <button class="btn" onclick="addProduct()">Produkt hinzufügen</button>
+    </div>`;
+  if(isOwner()) html += `
+    <div class="panel"><h2>Rabattcodes</h2>
+      <div class="row">
+        <div><label>Code</label><input type="text" id="cCode" placeholder="SOMMER25" style="text-transform:uppercase"></div>
+        <div><label>Rabatt in %</label><input type="number" id="cPct" min="1" max="100" placeholder="20"></div>
+        <div style="flex:0"><button class="btn orange" onclick="addCode()">Erstellen</button></div>
+      </div><br>
+      <table><tr><th>Code</th><th>Rabatt</th><th>Erstellt von</th><th>Status</th><th></th></tr>
+      ${Object.keys(db.codes).map(c=>`<tr><td><b>${esc(c)}</b></td><td>-${db.codes[c].percent}%</td><td>${esc(db.codes[c].by||"")}</td>
+        <td>${db.codes[c].active?"✅ aktiv":"⏸ aus"}</td>
+        <td><button class="btn alt small" onclick="toggleCode('${esc(c)}')">${db.codes[c].active?"Deaktivieren":"Aktivieren"}</button>
+            <button class="btn red small" onclick="delCode('${esc(c)}')">Löschen</button></td></tr>`).join("") || `<tr><td colspan="5" class="muted">Noch keine Codes.</td></tr>`}
+      </table>
+    </div>`;
+  if(isOwner()){
+    html += `
+    <div class="panel"><h2>Rechte vergeben (nur Admins)</h2>
+      <p class="muted" style="margin-top:0">Manager dürfen Preise ändern und Rabattcodes erstellen. Nur Admins (${OWNERS.map(esc).join(", ")}) können Rechte vergeben.</p>
+      <div class="row"><div><label>Minecraft-Name (muss registriert sein)</label><input type="text" id="gName"></div>
+      <div style="flex:0"><button class="btn orange" onclick="grantByName()">Zum Manager machen</button></div></div><br>
+      <table><tr><th>Spieler</th><th>Rolle</th><th></th></tr>
+      ${Object.keys(db.users).map(k=>{const u=db.users[k];return `<tr>
+        <td><span class="acct">${avatar(u.name,24)} ${esc(u.name)}</span></td><td>${roleBadge(u.role)}</td>
+        <td>${u.role==="owner" ? "" : u.role==="manager"
+          ? `<button class="btn red small" onclick="setRole('${k}','user')">Recht entziehen</button>`
+          : `<button class="btn small" onclick="setRole('${k}','manager')">Zum Manager</button>`}</td></tr>`}).join("")}
+      </table>
+    </div>
+    <div class="panel"><h2>Benachrichtigung bei Bestellungen</h2>
+      <p class="muted" style="margin-top:0">Discord-Webhook: Kanal ⚙️ → Integrationen → Webhooks → Neuer Webhook → URL kopieren. Hier einfügen, testen und den Code für die Datei erzeugen.</p>
+      <label>Webhook-URL</label>
+      <input type="text" id="nWebhook" value="${esc(notifyCfg().webhook)}" placeholder="https://discord.com/api/webhooks/...">
+      <br><br>
+      <label>Pings, durch Komma getrennt (z. B. &lt;@123456&gt;, &lt;@&amp;987654&gt;, @everyone)</label>
+      <input type="text" id="nMentions" value="${esc(notifyCfg().mentions.join(", "))}">
+      <br><br>
+      <div class="row" style="align-items:center">
+        <button class="btn" onclick="testNotify()">Discord-Test</button>
+        <button class="btn" onclick="testNtfy()">ntfy-Test</button>
+        <button class="btn alt" onclick="saveNotify()">Speichern</button>
+        <button class="btn orange" onclick="notifyCode()">Code für die Datei erzeugen</button>
+      </div>
+      <textarea id="nCode" rows="5" readonly style="display:none;width:100%;margin-top:12px;border:1px solid #888;border-radius:4px;padding:8px;font-family:monospace"></textarea>
+      <div class="warn" style="margin-top:12px">Speichern gilt nur in <b>deinem</b> Browser. Damit alle Besteller die Benachrichtigung auslösen, klicke „Code erzeugen“ und ersetze damit den <code>NOTIFY</code>-Block oben in der <code>index.html</code>.</div>
+    </div>
+    <div class="panel"><h2>Daten</h2>
+      <div class="row" style="align-items:center">
+        <button class="btn alt" onclick="exportDB()">Backup exportieren</button>
+        <label class="btn alt" style="margin:0;cursor:pointer;font-weight:400">Backup importieren<input type="file" accept=".json" hidden onchange="importDB(event)"></label>
+        <button class="btn red" onclick="resetShop()">Alles zurücksetzen</button>
+      </div>
+    </div>
+    <div class="panel"><h2>Alle Bestellungen</h2>
+      ${db.orders.length ? db.orders.slice().reverse().map(o=>`<div style="border-top:1px solid #e7e7e7;padding:8px 0;font-size:14px">
+        <b>${esc(o.user)}</b> · ${new Date(o.date).toLocaleString("de-DE")} · ${o.items.map(i=>`${i.qty}× ${esc(i.name)}`).join(", ")} · <b>${o.pay==="debris" ? fmtDebris(o.debris) : fmt(o.total)}</b>${o.tip ? ` (inkl. ${fmt(o.tip)} Trinkgeld)` : ""}</div>`).join("") : `<span class="muted">Keine Bestellungen.</span>`}
+    </div>`;
+  }
+  return html;
+}
+
+function render(){
+  renderHeader();
+  const v = state.view;
+  $("#app").innerHTML =
+    v==="cart" ? viewCart() : v==="orders" ? viewOrders() : v==="admin" ? viewAdmin() : viewShop();
+}
+
+document.addEventListener("keydown", e => {
+  if(e.key === "Enter" && $("#authModal").classList.contains("open")) submitAuth();
+  if(e.key === "Escape") closeAuth();
+});
+render();
+</script>
+</body>
+</html>
